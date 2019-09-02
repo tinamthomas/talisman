@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
+	"log"
 	"os"
 	"talisman/checksumcalculator"
 	"talisman/detector"
@@ -17,6 +19,9 @@ const (
 
 	//CompletedWithErrors is an exit status that says that the current runners run completed with failures
 	CompletedWithErrors int = 1
+
+	//DefaultScopeConfigFileName represents the name of the file which will have preset ignores for each scope
+	DefaultScopeConfigFileName string = "scope_config.go"
 )
 
 //Runner represents a single run of the validations for a given commit range
@@ -27,7 +32,10 @@ type Runner struct {
 
 //NewRunner returns a new Runner.
 func NewRunner(additions []git_repo.Addition) *Runner {
-	return &Runner{additions, detector.NewDetectionResults()}
+	return &Runner{
+		additions: additions,
+		results:   detector.NewDetectionResults(),
+	}
 }
 
 //RunWithoutErrors will validate the commit range for errors and return either COMPLETED_SUCCESSFULLY or COMPLETED_WITH_ERRORS
@@ -64,8 +72,21 @@ func (r *Runner) RunChecksumCalculator(fileNamePatterns []string) int {
 }
 
 func (r *Runner) doRun() {
-	ignoresNew := detector.ReadConfigFromRCFile(readRepoFile())
-	detector.DefaultChain().Test(r.additions, ignoresNew, r.results)
+	rcConfigIgnores := detector.ReadConfigFromRCFile(readRepoFile())
+	scopeMap := readScopeConfig()
+	additionsToScan := detector.IgnoreAdditionsByScope(r.additions, rcConfigIgnores, scopeMap);
+	detector.DefaultChain().Test(additionsToScan, rcConfigIgnores, r.results)
+}
+
+func readScopeConfig() map[string][]string {
+	var scope map[string][]string
+	err := yaml.Unmarshal([]byte(scopeConfig), &scope)
+	if err != nil {
+		log.Println("Unable to parse scope_config.go")
+		log.Printf("error: %v", err)
+		return scope
+	}
+	return scope
 }
 
 func (r *Runner) printReport() {
