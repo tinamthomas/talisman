@@ -2,7 +2,6 @@ package gitrepo
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -10,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 //FilePath represents the absolute path of an added file
@@ -222,6 +223,7 @@ func (repo GitRepo) trackedFilePaths() []string {
 		return make([]string, 0)
 	}
 	byteArray := repo.executeRepoCommand("git", "ls-tree", branchName, "--name-only", "-r")
+	//git log --pretty=format: --name-only --diff-filter=A | sort - | sed '/^$/d'
 	trackedFilePaths := strings.Split(string(byteArray), "\n")
 	return trackedFilePaths
 }
@@ -246,6 +248,8 @@ func (repo GitRepo) currentBranch() string {
 		return ""
 	}
 	byteArray := repo.executeRepoCommand("git", "rev-parse", "--abbrev-ref", "HEAD")
+	// git branch --show-current
+	// git symbolic-ref --short HEAD
 	branchName := strings.TrimSpace(string(byteArray))
 	return branchName
 }
