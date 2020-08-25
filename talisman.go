@@ -5,6 +5,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"runtime"
 	"talisman/prompt"
+	"talisman/scanner"
 )
 
 import (
@@ -66,7 +67,7 @@ func main() {
 	flag.BoolVarP(&interactive, "interactive", "i", false, "interactively update talismanrc (only makes sense with -g/--githook)")
 
 	flag.Parse()
-
+	args := flag.Args()
 	if showVersion {
 		fmt.Printf("talisman %s\n", Version)
 		os.Exit(0)
@@ -92,16 +93,26 @@ func main() {
 		checksum:        checksum,
 		reportdirectory: reportdirectory,
 		scanWithHtml:    scanWithHtml,
-
 	}
 
 	prompter := prompt.NewPrompt()
 	promptContext := prompt.NewPromptContext(interactive, prompter)
 
-	os.Exit(run(os.Stdin, _options, promptContext))
+	os.Exit(run(os.Stdin, _options, promptContext, args))
 }
 
-func run(stdin io.Reader, _options options, promptContext prompt.PromptContext) (returnCode int) {
+func runScan(reportDirectory string, args []string) int {
+	commitsRange := scanner.CommitRange{}
+	if len(args) == 2 {
+		commitsRange = scanner.CommitRange{StartCommitHash: args[0], EndCommitHash: args[1]}
+	} else if len(args) != 0 {
+		fmt.Println(fmt.Errorf("expected 0 or 2 args for scanning, but got %d arguments", len(args)))
+		os.Exit(1)
+	}
+	return NewRunner(make([]gitrepo.Addition, 0)).Scan(reportDirectory, commitsRange)
+}
+
+func run(stdin io.Reader, _options options, promptContext prompt.PromptContext, args []string) (returnCode int) {
 	if err := validateGitExecutable(afero.NewOsFs(), runtime.GOOS); err != nil {
 		log.Printf("error validating git executable: %v", err)
 		return 1
@@ -123,10 +134,10 @@ func run(stdin io.Reader, _options options, promptContext prompt.PromptContext) 
 		return NewRunner(make([]gitrepo.Addition, 0)).RunChecksumCalculator(strings.Fields(_options.checksum))
 	} else if _options.scan {
 		log.Infof("Running scanner")
-		return NewRunner(make([]gitrepo.Addition, 0)).Scan(_options.reportdirectory)
+		return runScan(_options.reportdirectory, args)
 	} else if _options.scanWithHtml {
 		log.Infof("Running scanner with html report")
-		return NewRunner(make([]gitrepo.Addition, 0)).Scan("talisman_html_report")
+		return runScan("talisman_html_report", args)
 	} else if _options.pattern != "" {
 		log.Infof("Running %s pattern", _options.pattern)
 		directoryHook := NewDirectoryHook()

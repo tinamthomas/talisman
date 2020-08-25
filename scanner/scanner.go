@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -12,9 +13,14 @@ type BlobsInCommits struct {
 	commits map[string][]string
 }
 
+type CommitRange struct {
+	StartCommitHash string
+	EndCommitHash   string
+}
+
 // GetAdditions will get all the additions for entire git history
-func GetAdditions() []gitrepo.Addition {
-	blobsInCommits := getBlobsInCommit()
+func GetAdditions(commitRange CommitRange) []gitrepo.Addition {
+	blobsInCommits := getBlobsInCommit(commitRange)
 	var additions []gitrepo.Addition
 	for blob := range blobsInCommits.commits {
 		objectDetails := strings.Split(blob, "\t")
@@ -27,8 +33,8 @@ func GetAdditions() []gitrepo.Addition {
 	return additions
 }
 
-func getBlobsInCommit() BlobsInCommits {
-	commits := getAllCommits()
+func getBlobsInCommit(commitRange CommitRange) BlobsInCommits {
+	commits := getAllCommits(commitRange)
 	blobsInCommits := newBlobsInCommit()
 	result := make(chan []string, len(commits))
 	for _, commit := range commits {
@@ -62,8 +68,12 @@ func getBlobsFromChannel(blobsInCommits BlobsInCommits, result chan []string) {
 	}
 }
 
-func getAllCommits() []string {
-	out, err := exec.Command("git", "log", "--all", "--pretty=%H").CombinedOutput()
+func getAllCommits(commitRange CommitRange) []string {
+	commitsOption := "--all"
+	if (CommitRange{}) != commitRange {
+		commitsOption = fmt.Sprintf("%s^..%s", commitRange.StartCommitHash, commitRange.EndCommitHash)
+	}
+	out, err := exec.Command("git", "log", commitsOption, "--pretty=%H").CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
