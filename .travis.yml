@@ -13,8 +13,10 @@ jobs:
   - stage: test
     script:
     - go mod vendor
-    - go test -covermode=count -coverprofile=coverage.out -v ./...
+    - go test -covermode=count -coverprofile=coverage.txt -v ./...
     - "$GOPATH/bin/goveralls -coverprofile=coverage.out -service=travis-ci"
+    after_success:
+      - bash <(curl -s https://codecov.io/bash)
 before_deploy: "./build && ./upx_compress.sh"
 deploy:
   provider: releases
