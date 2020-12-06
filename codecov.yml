@@ -8,7 +8,7 @@ codecov:
   status:
     project:
       default:
-        target: 88%    # the required coverage value
+        target: 69%    # the required coverage value
         threshold: 1%  # the leniency in hitting the target
   notify:
     after_n_builds: 2
@@ -22,4 +22,4 @@ codecov:
       branches:               # branch names that can post comment
         - "master"
   ignore:
-    - "**/*.yml"
+    - detector/severity/severity_config.go
