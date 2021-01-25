@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"talisman/utility"
 
 	logr "github.com/Sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -77,7 +78,10 @@ func SetRcFilename(rcFileName string) {
 }
 
 func Get() *TalismanRC {
-	return ReadConfigFromRCFile(readRepoFile())
+	if currentRCFileName == DefaultRCFileName {
+		return ReadConfigFromRCFile(readRepoFile())	
+	}
+	return ReadConfigFromRCFile(utility.SafeReadFileOrNothing)
 }
 
 func (tRC *TalismanRC) IsEmpty() bool {

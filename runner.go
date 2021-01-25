@@ -41,8 +41,8 @@ func NewRunner(additions []gitrepo.Addition) *Runner {
 }
 
 //RunWithoutErrors will validate the commit range for errors and return either COMPLETED_SUCCESSFULLY or COMPLETED_WITH_ERRORS
-func (r *Runner) RunWithoutErrors(promptContext prompt.PromptContext) int {
-	r.doRun()
+func (r *Runner) RunWithoutErrors(promptContext prompt.PromptContext, talismanRCLocation string) int {
+	r.doRun(talismanRCLocation)
 	r.printReport(promptContext)
 	return r.exitStatus()
 }
@@ -83,7 +83,8 @@ func (r *Runner) RunChecksumCalculator(fileNamePatterns []string) int {
 	return exitStatus
 }
 
-func (r *Runner) doRun() {
+func (r *Runner) doRun(talismanRCLocation string) {
+	talismanrc.SetRcFilename(talismanRCLocation)
 	rcConfig := talismanrc.Get()
 	setCustomSeverities(rcConfig)
 	scopeMap := getScopeConfig()

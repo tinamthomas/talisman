@@ -86,7 +86,7 @@ if [ "${TALISMAN_INTERACTIVE}" == "true" ]; then
 	  [[ "${HOOKNAME}" == "pre-commit" ]] && exec < /dev/tty || echo_warning "talisman pre-push hook cannot be invoked in interactive mode currently"
 fi
 
-CMD="${TALISMAN_BINARY} ${DEBUG_OPTS} --githook ${HOOKNAME} ${INTERACTIVE}"
+CMD="${TALISMAN_BINARY} ${DEBUG_OPTS} --githook ${HOOKNAME} ${INTERACTIVE} TALISMAN_FILE_NAME=${TALISMAN_FILE_NAME}"
 echo_debug "ARGS are $@"
 echo_debug "Executing: ${CMD}"
 ${CMD}

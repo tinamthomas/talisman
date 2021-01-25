@@ -31,6 +31,7 @@ var (
 	reportdirectory string
 	scanWithHtml    bool
 	interactive     bool
+	talismanRCLocation string
 )
 
 const (
@@ -53,6 +54,7 @@ type options struct {
 	checksum        string
 	reportdirectory string
 	scanWithHtml    bool
+	talismanRCLocation string
 }
 
 //Logger is the default log device, set to emit at the Error level by default
@@ -61,6 +63,7 @@ func main() {
 	flag.BoolVarP(&showVersion, "version", "v", false, "show current version of talisman")
 	flag.StringVarP(&pattern, "pattern", "p", "", "pattern (glob-like) of files to scan (ignores githooks)")
 	flag.StringVarP(&githook, "githook", "g", PrePush, "either pre-push or pre-commit")
+	flag.StringVar(&talismanRCLocation, "talismanRCLocation", ".talismanrc", "talismanRC full path")
 	flag.BoolVarP(&scan, "scan", "s", false, "scanner scans the git commit history for potential secrets")
 	flag.BoolVar(&ignoreHistory, "ignoreHistory", false, "scanner scans all files on current head, will not scan through git commit history")
 	flag.StringVarP(&checksum, "checksum", "c", "", "checksum calculator calculates checksum and suggests .talismanrc format")
@@ -96,6 +99,7 @@ func main() {
 		checksum:        checksum,
 		reportdirectory: reportdirectory,
 		scanWithHtml:    scanWithHtml,
+		talismanRCLocation: talismanRCLocation,
 	}
 
 	prompter := prompt.NewPrompt()
@@ -144,7 +148,7 @@ func run(stdin io.Reader, _options options, promptContext prompt.PromptContext) 
 		additions = prePushHook.GetRepoAdditions()
 	}
 
-	return NewRunner(additions).RunWithoutErrors(promptContext)
+	return NewRunner(additions).RunWithoutErrors(promptContext, _options.talismanRCLocation)
 }
 
 func readRefAndSha(file io.Reader) (string, string, string, string) {

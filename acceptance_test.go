@@ -100,6 +100,7 @@ func TestAddingSecretKeyShouldExitOneIfPEMFileIsPresentInTheGitHistory(t *testin
 			debug:   false,
 			githook: PrePush,
 			scan:    false,
+			talismanRCLocation: ".talismanrc",
 		}
 		git.SetupBaselineFiles("simple-file")
 		git.CreateFileWithContents("private.pem", "secret")
@@ -327,6 +328,7 @@ func runTalisman(git *git_testing.GitTesting) int {
 	_options := options{
 		debug:   false,
 		githook: PrePush,
+		talismanRCLocation: ".talismanrc",
 	}
 	return runTalismanWithOptions(git, _options)
 }

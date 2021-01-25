@@ -106,3 +106,10 @@ func SafeReadFile(path string) ([]byte, error) {
 	}
 	return ioutil.ReadFile(path)
 }
+
+func SafeReadFileOrNothing(path string) ([]byte, error) {
+	if _, err := os.Stat(path); err == nil {
+		return SafeReadFile(path)
+	}
+	return []byte{}, nil
+}
